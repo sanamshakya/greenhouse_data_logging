@@ -16,57 +16,93 @@ def parseBuffer(bufferSerial):
         data = bufferSerial[commaLocation[count]+1:commaLocation[count+1]]
         parsedData.append(data)
     return parsedData
+
+def loadDatainDB(bufferSerial):
+    parsedData = parseBuffer(bufferSerial)
+
+    deviceID = int(parsedData[2])
+    temperature = float(parsedData[0])
+    humidity = float(parsedData[1])
+
+    m = 0.0066071428571428574
+    c = -37.43
+    m2 = 0.0052734375
+    c2 = -62.94
+
+    temperature = m * temperature + c
+    humidity = m2 * humidity + c2
+
+    print deviceID,temperature,humidity
+
+    # Open database connection
+    db = MySQLdb.connect(host="127.0.0.1",user="sanamshakya",passwd="starfish",db="test_data")
+    # prepare a cursor object using cursor() method
+    cursor = db.cursor()
+
+    # Prepare SQL query to INSERT a record into the database.
+    # creating static query using string
+    sql1= """INSERT INTO `test_data`.`erts_lab_data` (`id`, `timestamp`, `Temperature`, `Humidity`) VALUES (NULL, CURRENT_TIMESTAMP, '45', '98')"""
+
+    # creating dynamic query using string
+    sql = "INSERT INTO `erts_lab_data` ( `Temperature`, `Humidity`)  VALUES ('%f','%f') " % (temperature, humidity)
+
+
+    try:
+        # Execute the SQL command
+        cursor.execute(sql)
+        # Commit your changes in the database
+        db.commit()
+    except:
+        # Rollback in case there is any error
+        db.rollback()
+
+    # disconnect from server
+    db.close()
+
       
 
 ser = serial.Serial(2)
-count = 100
+
+count = 1000
+in_flag = False
+serialBuffer = ""
+currentBuffer = ""
+lastBuffer = ""
 while(count>0):
    time.sleep(1)
+   
+   #time.sleep(1)
+   #print "serial Buffer :", serialBuffer
+   #print "count:",count
    count = count - 1
-
-
-
-
    while (ser.inWaiting()):
-      #print ser.inWaiting
-      if (ser.inWaiting()<20):
-         bufferSerial = ser.read(ser.inWaiting())
-         parsedData = parseBuffer(bufferSerial)
+       #print ser.inWaiting
+       
+       #serialBuffer = "$"
+       #print serialBuffer
+       data = ser.read()
+       #print "data:", data
+       if data == "$":
+           in_flag = True
+       if(in_flag ):
+           #print "writing buffer"
+           serialBuffer = serialBuffer + data
+           #print serialBuffer
+       if data == "*":
+           in_flag = False
+           currentBuffer = serialBuffer
+           serialBuffer = ""
+           data = "#"
 
-         deviceID = int(parsedData[0])
-         temperature = float(parsedData[1])
-         humidity = float(parsedData[2])
+   if not(lastBuffer == currentBuffer):
+       print "serial:",currentBuffer
+       loadDatainDB(currentBuffer)
+   lastBuffer = currentBuffer
+   
 
-         print deviceID,temperature,humidity
-            
-
-         
-
-         # Open database connection
-         db = MySQLdb.connect(host="127.0.0.1",user="sanamshakya",passwd="starfish",db="test_data")
-         # prepare a cursor object using cursor() method
-         cursor = db.cursor()
+   #loadDatainDB(serialBuffer)
+   ser.flushInput()
    
-         # Prepare SQL query to INSERT a record into the database.
-         # creating static query using string
-         sql1= """INSERT INTO `test_data`.`erts_lab_data` (`id`, `timestamp`, `Temperature`, `Humidity`) VALUES (NULL, CURRENT_TIMESTAMP, '45', '98')"""
-   
-         # creating dynamic query using string
-         sql = "INSERT INTO `erts_lab_data` ( `Temperature`, `Humidity`)  VALUES ('%f','%f') " % (temperature, humidity)
-   
-   
-         try:
-            # Execute the SQL command
-            cursor.execute(sql)
-            # Commit your changes in the database
-            db.commit()
-         except:
-            # Rollback in case there is any error
-            db.rollback()
-   
-         # disconnect from server
-         db.close()
-      else:
-          ser.flushInput()
+    
 
 ser.close()      
