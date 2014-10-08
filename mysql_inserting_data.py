@@ -68,13 +68,13 @@ in_flag = False
 serialBuffer = ""
 currentBuffer = ""
 lastBuffer = ""
-while(count>0):
+while(1):
    time.sleep(1)
    
    #time.sleep(1)
    #print "serial Buffer :", serialBuffer
    #print "count:",count
-   count = count - 1
+   #count = count - 1
    while (ser.inWaiting()):
        #print ser.inWaiting
        
