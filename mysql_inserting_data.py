@@ -60,8 +60,10 @@ def loadDatainDB(bufferSerial):
     db.close()
 
       
-
-ser = serial.Serial(2)
+# for serial comm in windows pc
+#ser = serial.Serial(2)
+# for serial connection in Raspberry pi with its gpio serial port GPIO14(TXD) and GPIO15(RXD)
+ser = serial.Serial(port="/dev/ttyAMA0",baudrate=9600) 
 
 count = 1000
 in_flag = False
