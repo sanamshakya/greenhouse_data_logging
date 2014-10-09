@@ -45,11 +45,14 @@ def loadDatainDB(bufferSerial):
 
     # creating dynamic query using string
     sql = "INSERT INTO `erts_lab_data` ( `Temperature`, `Humidity`)  VALUES ('%f','%f') " % (temperature, humidity)
+    
+    # entering the data in greenhouse databaee table
+    sql_greenhoue = "INSERT INTO `greenhouse_data` ( `Temperature`, `Humidity`)  VALUES ('%f','%f') " % (temperature, humidity)
 
 
     try:
         # Execute the SQL command
-        cursor.execute(sql)
+        cursor.execute(sql_greenhouse)
         # Commit your changes in the database
         db.commit()
     except:
